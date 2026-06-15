@@ -165,12 +165,13 @@ public class PostsTest extends BaseTest {
         };
     }
 
-    @Test(dataProvider = "postIds", description = "GET /posts/{id} with multiple valid IDs return 200")
-    public void getMultiplePosts_ValidUserIds_Return200(int id){
+    @Test(dataProvider = "postIds", description = "GET /posts/{id} with multiple valid IDs return 200 and verify correct Id")
+    public void getMultiplePosts_ValidUserIds_Return200_VerifyId(int id){
         given(requestSpec)
         .when()
             .get("/posts/{id}", id)
         .then()
-            .statusCode(200);
+            .statusCode(200)
+            .body("id", equalTo(id));
     }
 }
