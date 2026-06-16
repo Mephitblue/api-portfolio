@@ -7,6 +7,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import static org.hamcrest.Matchers.*;
 import static io.restassured.RestAssured.given;
+import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
 
 /**
  * PostsTest covers the /posts endpoint on JSONPlaceholder.
@@ -173,5 +174,45 @@ public class PostsTest extends BaseTest {
         .then()
             .statusCode(200)
             .body("id", equalTo(id));
+    }
+
+    @DataProvider(name = "postIdsAndTitles")
+    public Object[][] postIdsAndTitles() {
+        return new Object[][]{
+                {1, "sunt aut facere repellat provident occaecati excepturi optio reprehenderit" },
+                {2, "qui est esse" },
+                {3, "ea molestias quasi exercitationem repellat qui ipsa sit aut" }
+        };
+    }
+
+    @Test(dataProvider = "postIdsAndTitles", description = "GET /posts/{id} with multiple valid IDs return 200 and verify correct Id and title")
+    public void getMultiplePosts_ValidUserIds_Return200_VerifyIdAndTitle(int id, String title){
+        given(requestSpec)
+        .when()
+            .get("/posts/{id}", id)
+        .then()
+            .statusCode(200)
+            .body("id", equalTo(id))
+            .body("title", equalTo(title));
+    }
+
+    @Test(description = "GET /posts/1 and validate 200 and return body matches schema")
+    public void getPosts_Id1_return200_verifySchema(){
+        given(requestSpec)
+        .when()
+            .get("/posts/1")
+        .then()
+            .statusCode(200)
+            .body(matchesJsonSchemaInClasspath("schemas/post-schema.json"));
+    }
+
+    @Test(description = "GET /posts and validate 200 and return body matches array schema")
+    public void getPosts_return200_verifySchema(){
+        given(requestSpec)
+        .when()
+            .get("/posts")
+        .then()
+            .statusCode(200)
+            .body(matchesJsonSchemaInClasspath("schemas/posts-array-schema.json"));
     }
 }
