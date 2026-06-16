@@ -8,5 +8,10 @@
             <class name="com.keithlamond.api.tests.PostsTest"/>
         </classes>
     </test>
+    <test name="CatAPI Tests">
+        <classes>
+            <class name="com.keithlamond.api.tests.CatApiTest"/>
+        </classes>
+    </test>
 
 </suite>

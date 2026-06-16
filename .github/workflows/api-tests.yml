@@ -30,6 +30,8 @@ jobs:
 
       - name: Run API test suite
         run: mvn test
+        env:
+          CAT_API_KEY: ${{ secrets.CAT_API_KEY }}
 
       - name: Upload TestNG report
         uses: actions/upload-artifact@v4

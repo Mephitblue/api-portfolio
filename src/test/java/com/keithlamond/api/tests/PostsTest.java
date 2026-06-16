@@ -22,25 +22,29 @@ import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInC
 
 public class PostsTest extends BaseTest {
 
+    public PostsTest() {
+        super("jsonplaceholder.properties");
+    }
+
     @Test(description = "GET /posts returns 200 and non-empty list")
     public void getAllPosts_Returns200() {
         given(requestSpec)
-                .when()
-                .get("/posts")
-                .then()
-                .statusCode(200)
-                .body("$.size()", greaterThan(0));
+        .when()
+            .get("/posts")
+        .then()
+            .statusCode(200)
+        .body("$.size()", greaterThan(0));
     }
 
     @Test(description = "GET /posts ID 1 and verify correct post returned and it has Title field")
     public void getPostById_ValidId_Returns200WithCorrectData() {
         Post post = given(requestSpec)
-                .when()
-                .get("/posts/1")
-                .then()
-                .statusCode(200)
-                .extract()
-                .as(Post.class);
+                    .when()
+                        .get("/posts/1")
+                    .then()
+                        .statusCode(200)
+                        .extract()
+                    .   as(Post.class);
         Assert.assertEquals(post.getId(), 1);
         Assert.assertEquals(post.getTitle(), "sunt aut facere repellat provident occaecati excepturi optio reprehenderit");
     }
@@ -48,22 +52,22 @@ public class PostsTest extends BaseTest {
     @Test(description = "GET /posts with invalid ID of 9999 and check returned status is a 404")
     public void getPostByID_InvalidId_Returns404() {
         given(requestSpec)
-                .when()
-                .get("/posts/9999")
-                .then()
-                .statusCode(404);
+        .when()
+            .get("/posts/9999")
+        .then()
+            .statusCode(404);
     }
 
     @Test(description = "GET /posts filtered on userId 1 and verify 10 records returned and they all have userId 1")
     public void getAllPosts_FilteredByUserID1_Returns200WithCorrectSizeAndUserId() {
         given(requestSpec)
-                .queryParam("userId", 1)
-                .when()
-                .get("/posts")
-                .then()
-                .statusCode(200)
-                .body("$.size()", equalTo(10))
-                .body("userId", everyItem(equalTo(1)));
+            .queryParam("userId", 1)
+        .when()
+            .get("/posts")
+        .then()
+            .statusCode(200)
+            .body("$.size()", equalTo(10))
+            .body("userId", everyItem(equalTo(1)));
     }
 
     @Test(description = "POST /post with userId 101, title new post, and body test message.  Verify post contents echoed in response")
@@ -73,15 +77,15 @@ public class PostsTest extends BaseTest {
         String body = "Body of new test post";
         Post post = new Post(userId, title, body);
         given(requestSpec)
-                .body(post)
-                .when()
-                .post("/posts")
-                .then()
-                .statusCode(201)
-                .body("id", notNullValue())
-                .body("userId", equalTo(userId))
-                .body("title", equalTo(title))
-                .body("body", equalTo(body));
+            .body(post)
+        .when()
+            .post("/posts")
+        .then()
+            .statusCode(201)
+            .body("id", notNullValue())
+            .body("userId", equalTo(userId))
+            .body("title", equalTo(title))
+            .body("body", equalTo(body));
 
     }
 
@@ -92,24 +96,24 @@ public class PostsTest extends BaseTest {
         String body = "Updated body";
         Post updatedPost = new Post(userId, title, body);
         given(requestSpec)
-                .body(updatedPost)
-                .when()
-                .put("/posts/1")
-                .then()
-                .statusCode(200)
-                .body("id", equalTo(1))
-                .body("userId", equalTo(userId))
-                .body("title", equalTo(title))
-                .body("body", equalTo(body));
+            .body(updatedPost)
+        .when()
+            .put("/posts/1")
+        .then()
+            .statusCode(200)
+            .body("id", equalTo(1))
+            .body("userId", equalTo(userId))
+            .body("title", equalTo(title))
+            .body("body", equalTo(body));
     }
 
     @Test(description = "DELETE /posts/1 and verify 200 status code")
     public void deletePosts_Id1_Verify200StatusCode() {
         given(requestSpec)
-                .when()
-                .delete("/posts/1")
-                .then()
-                .statusCode(200);
+        .when()
+            .delete("/posts/1")
+        .then()
+            .statusCode(200);
     }
 
     @Test(description = "POST /posts new post with userId, title, and body fields, verify echo response, and extract returned id")
@@ -119,16 +123,16 @@ public class PostsTest extends BaseTest {
         String body = "Body of new post for chain GET check";
         Post post = new Post(userId, title, body);
         int id = given(requestSpec)
-                .body(post)
+                    .body(post)
                 .when()
-                .post("/posts")
+                    .post("/posts")
                 .then()
-                .statusCode(201)
-                .body("userId", equalTo(userId))
-                .body("title", equalTo(title))
-                .body("body", equalTo(body))
-                .extract()
-                .path("id");
+                    .statusCode(201)
+                    .body("userId", equalTo(userId))
+                    .body("title", equalTo(title))
+                    .body("body", equalTo(body))
+                    .extract()
+                    .path("id");
 
         Assert.assertTrue(id > 0);
 
