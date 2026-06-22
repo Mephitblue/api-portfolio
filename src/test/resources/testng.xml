@@ -13,5 +13,10 @@
             <class name="com.keithlamond.api.tests.CatApiTest"/>
         </classes>
     </test>
+    <test name="GitHub API Tests">
+        <classes>
+            <class name="com.keithlamond.api.tests.GitHubApiTest"/>
+        </classes>
+    </test>
 
 </suite>

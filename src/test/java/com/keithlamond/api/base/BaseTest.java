@@ -15,10 +15,21 @@ import java.util.Properties;
  * BaseTest establishes reusable request and response specifications
  * shared across all test classes.
  *
- * Reads base URI and optional API key configuration from a properties
- * file. Subclasses specify which properties file to load by passing
- * the filename to the constructor. API keys are never stored in source
- * code — they are read from environment variables at runtime.
+ * Configuration is loaded from a properties file specified by each
+ * subclass via the constructor. Supported properties:
+ *
+ *   base.uri      — the root URL for the target API
+ *   api.key.env   — the name of the environment variable holding the API key
+ *   auth.scheme   — the authentication scheme to apply (none, api-key, bearer)
+ *
+ * Authentication schemes:
+ *   none      — no authentication header added (e.g. JSONPlaceholder)
+ *   api-key   — adds x-api-key header (e.g. The Cat API)
+ *   bearer    — adds Authorization: Bearer header (e.g. GitHub API)
+ *
+ * API keys and tokens are never stored in source code. They are read
+ * from environment variables at runtime and injected via GitHub Actions
+ * repository secrets in CI.
  */
 public class BaseTest {
 
@@ -51,12 +62,18 @@ public class BaseTest {
                 .setBaseUri(baseUri)
                 .setContentType(ContentType.JSON);
 
-        if (!apiKeyEnvVar.isEmpty()) {
+        String authScheme = props.getProperty("auth.scheme", "none");
+
+        if (!authScheme.equals("none") && !apiKeyEnvVar.isEmpty()) {
             String apiKey = System.getenv(apiKeyEnvVar);
             if (apiKey == null || apiKey.isEmpty()) {
                 throw new RuntimeException("Environment variable not set: " + apiKeyEnvVar);
             }
-            builder.addHeader("x-api-key", apiKey);
+            switch(authScheme){
+                case "api-key" -> builder.addHeader("x-api-key", apiKey);
+                case "bearer" -> builder.addHeader("Authorization", "Bearer " + apiKey);
+                default -> throw new RuntimeException("Unknown auth scheme: " + authScheme);
+            }
         }
 
         requestSpec = builder.build();

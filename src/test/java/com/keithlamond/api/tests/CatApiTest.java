@@ -1,8 +1,6 @@
 package com.keithlamond.api.tests;
 
 import com.keithlamond.api.base.BaseTest;
-import org.testng.Assert;
-import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 import static org.hamcrest.Matchers.*;
 import static io.restassured.RestAssured.given;
