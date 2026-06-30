@@ -1,6 +1,6 @@
 # REST Assured API Test Framework
 
-A Java-based API test automation framework built with REST Assured and TestNG, demonstrating enterprise framework design patterns for API validation across multiple APIs with varying authentication schemes.
+A Java-based API test automation framework built with REST Assured and TestNG, demonstrating enterprise framework design patterns for API validation across multiple APIs with varying authentication schemes. The framework runs in an isolated Docker container — no local Java or Maven installation required.
 
 ## Framework Design
 
@@ -42,6 +42,107 @@ src/test/resources/
 └── api-tests.yml                  # GitHub Actions CI pipeline
 ```
 
+## Running the Tests
+
+### Prerequisites
+
+**All execution paths** require two environment variables:
+
+| Variable | Source |
+|----------|--------|
+| `CAT_API_KEY` | Free key from [thecatapi.com](https://thecatapi.com) |
+| `GH_TOKEN` | Personal Access Token from [github.com/settings/tokens](https://github.com/settings/tokens) with `public_repo` and `read:user` scopes |
+
+---
+
+### Docker (no local Java or Maven required)
+
+**Build the image:**
+
+```bash
+docker build \
+  --build-arg CAT_API_KEY=$CAT_API_KEY \
+  --build-arg GH_TOKEN=$GH_TOKEN \
+  -t api-portfolio .
+```
+
+**Run the full test suite:**
+
+```bash
+docker run --rm \
+  -e CAT_API_KEY=$CAT_API_KEY \
+  -e GH_TOKEN=$GH_TOKEN \
+  api-portfolio
+```
+
+**Run a single test class:**
+
+```bash
+docker run --rm \
+  -e CAT_API_KEY=$CAT_API_KEY \
+  -e GH_TOKEN=$GH_TOKEN \
+  api-portfolio \
+  mvn test -Dtest=PostsTest --batch-mode
+```
+
+**Mount the target directory to retrieve reports after the run:**
+
+```bash
+docker run --rm \
+  -e CAT_API_KEY=$CAT_API_KEY \
+  -e GH_TOKEN=$GH_TOKEN \
+  -v $(pwd)/target:/app/target \
+  api-portfolio
+```
+
+TestNG HTML and XML reports land in `target/surefire-reports/` on the host after the container exits.
+
+---
+
+### Docker Compose
+
+Set your credentials in the shell, then:
+
+```bash
+export CAT_API_KEY=your_key_here
+export GH_TOKEN=your_token_here
+
+docker-compose up --build
+```
+
+The container exits when the test run completes. Reports are written to `./target/surefire-reports/` via the volume mount configured in `docker-compose.yml`. Exit code is non-zero if any test fails, making it suitable for use in scripts.
+
+To run a subsequent execution without rebuilding:
+
+```bash
+docker-compose up
+```
+
+---
+
+### Local (Java 17+ and Maven 3.6+ required)
+
+```bash
+# Run the full suite
+mvn test
+
+# Run a single test class
+mvn test -Dtest=PostsTest
+
+# Run a single test method
+mvn test -Dtest=PostsTest#getPostById_ValidId_Returns200WithCorrectData
+```
+
+---
+
+## CI/CD Integration
+
+The suite runs automatically on push and pull request via GitHub Actions. The workflow builds the Docker image, caches layers between runs using GitHub Actions cache, and executes the full test suite inside the container.
+
+`CAT_API_KEY` and `GH_TOKEN` are stored as GitHub Actions repository secrets and injected at build and run time. TestNG reports are uploaded as build artifacts with a 14-day retention window on every run.
+
+---
+
 ## Test Coverage
 
 ### PostsTest — [JSONPlaceholder](https://jsonplaceholder.typicode.com/) (no authentication)
@@ -71,44 +172,24 @@ src/test/resources/
 - Negative testing — verify correct error response for invalid user
 - Authentication — Personal Access Token read from environment variable, injected as `Authorization: Bearer` header via `RequestSpecBuilder`
 
+---
+
 ## Authentication Schemes
 
-The framework supports three authentication schemes configured via properties files:
+| Scheme    | Header                  | Used By         |
+|-----------|-------------------------|-----------------|
+| `none`    | none                    | JSONPlaceholder |
+| `api-key` | `x-api-key`             | The Cat API     |
+| `bearer`  | `Authorization: Bearer` | GitHub REST API |
 
-| Scheme | Header | Used By |
-|--------|--------|---------|
-| `none` | none | JSONPlaceholder |
-| `api-key` | `x-api-key` | The Cat API |
-| `bearer` | `Authorization: Bearer` | GitHub REST API |
-
-## Running the Tests
-
-Prerequisites: Java 17+, Maven 3.6+
-
-The Cat API tests require a `CAT_API_KEY` environment variable. Sign up for a free key at [thecatapi.com](https://thecatapi.com).
-
-The GitHub API tests require a `GH_TOKEN` environment variable. Generate a Personal Access Token at [github.com/settings/tokens](https://github.com/settings/tokens) with `public_repo` and `read:user` scopes.
-
-```bash
-# Run the full suite
-mvn test
-
-# Run a single test class
-mvn test -Dtest=PostsTest
-
-# Run a single test method
-mvn test -Dtest=PostsTest#getPostById_ValidId_Returns200WithCorrectData
-```
-
-## CI/CD Integration
-
-The suite runs automatically on push and pull request via GitHub Actions. `CAT_API_KEY` and `GH_TOKEN` are stored as GitHub Actions repository secrets and injected as environment variables at runtime. TestNG reports are uploaded as build artifacts on every run.
+---
 
 ## Technologies
 
 - **REST Assured 5.4.0** — fluent Java DSL for API test automation
 - **TestNG 7.9.0** — test execution, assertions, data-driven testing, and suite organization
 - **Jackson 2.17.0** — JSON serialization and deserialization
+- **Docker** — containerized test execution with no local runtime dependency
 - **Maven** — dependency management and build execution
 - **Java 17** — text blocks, switch expressions, and modern language features
-- **GitHub Actions** — CI/CD pipeline with repository secret management
+- **GitHub Actions** — CI/CD pipeline with Docker-based test execution and repository secret management

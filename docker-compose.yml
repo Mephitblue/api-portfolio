@@ -1,0 +1,16 @@
+services:
+  api-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Pass the same variables at runtime for the CMD entrypoint
+    environment:
+      - CAT_API_KEY=${CAT_API_KEY}
+      - GH_TOKEN=${GH_TOKEN}
+    # Mount the target directory so TestNG HTML/XML reports land on the host
+    # after the container exits. Useful for inspecting results without re-running.
+    volumes:
+      - ./target:/app/target
+    # Container exits when tests complete — docker-compose up blocks and tails logs.
+    # Exit code propagates: non-zero if any test fails.
+    restart: "no"

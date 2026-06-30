@@ -19,13 +19,6 @@ RUN mvn dependency:go-offline --batch-mode -q
 # Copy source after the dependency layer is cached
 COPY src ./src
 
-# Runtime — accept API credentials as build args so the image can be built
-# without secrets baked in. At run time these are passed as environment variables.docker build --build-arg CAT_API_KEY=$env:CAT_API_KEY --build-arg GH_TOKEN=$env:GH_TOKEN -t api-portfolio .
-ARG CAT_API_KEY
-ARG GH_TOKEN
-ENV CAT_API_KEY=${CAT_API_KEY}
-ENV GH_TOKEN=${GH_TOKEN}
-
 # Default command: run the full test suite.
 # Override at runtime to run a single class: docker run ... mvn test -Dtest=PostsTest
 CMD ["mvn", "test", "--batch-mode"]
